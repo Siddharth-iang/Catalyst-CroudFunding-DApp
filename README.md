@@ -1,27 +1,28 @@
-Technology
-This demo uses:
-Metamask
-Hardhat
-Infuria
-ReactJs
-Tailwind CSS
-CometChat
-Solidity
-EthersJs
-Faucet
+# 🚀 Catalyst - Decentralized Crowdfunding Platform
 
-Running the demo
-To run the demo follow these steps:
+Catalyst is a blockchain-based crowdfunding platform that allows creators to raise funds for their projects transparently and securely. By leveraging Ethereum smart contracts, Catalyst ensures that all funds are managed trustlessly, giving backers confidence that their contributions are used as intended.
+The platform features a modern React frontend, secure Solidity smart contracts, and real-time communication between project owners and backers.
 
-Clone the project with the code below.
-# Make sure you have the above prerequisites installed already!
-git clone https://github.com/Daltonic/genesis PROJECT_NAME
-cd PROJECT_NAME # Navigate to the new folder.
-yarn install # Installs all the dependencies.
-Create an Infuria project, copy and paste your key in the spaces below.
-Update the .env file with the following details.
-ENDPOINT_URL=<RPC_URL>
-SECRET_KEY=<SECRET_PHRASE>
-DEPLOYER_KEY=<YOUR_PRIVATE_KEY>
-Create a CometChat project, copy and paste your key in the spaces below.
-Run the app using yarn start
+
+## ⚙️ Prerequisites
+
+Before running this project, ensure you have the following installed:
+
+* [Node.js](https://nodejs.org/) (v16 or higher)
+* [MetaMask](https://metamask.io/) browser extension
+* [Git](https://git-scm.com/)
+
+
+## 🛠️ Tech Stack
+
+**Frontend:**
+* ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) **React.js** - UI Framework
+* ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white) **Tailwind CSS** - Styling
+* **CometChat** - Real-time messaging SDK
+* **Ethers.js** - Blockchain interaction library
+
+**Backend (Blockchain):**
+* ![Solidity](https://img.shields.io/badge/Solidity-e6e6e6?style=for-the-badge&logo=solidity&logoColor=black) **Solidity** - Smart Contract Language
+* ![Hardhat](https://img.shields.io/badge/Hardhat-20232A?style=for-the-badge&logo=hardhat&logoColor=yellow) **Hardhat** - Ethereum Development Environment
+* **Infura** - RPC Provider for deploying to testnets (Sepolia/Goerli)
+* **MetaMask** - Wallet & Transaction signing
