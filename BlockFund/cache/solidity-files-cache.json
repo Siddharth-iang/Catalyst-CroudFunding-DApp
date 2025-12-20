@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Hp\\CROWDFUNDING\\BlockFund\\src\\contracts\\Catalyst.sol": {
+      "lastModificationDate": 1766140508131,
+      "contentHash": "867b7c294147248d843ec43a02147ed9",
+      "sourceName": "src/contracts/Catalyst.sol",
+      "solcConfig": {
+        "version": "0.8.11",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.11"
+      ],
+      "artifacts": [
+        "Catalyst"
+      ]
+    }
+  }
+}
