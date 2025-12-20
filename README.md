@@ -1,6 +1,5 @@
 Technology
 This demo uses:
-
 Metamask
 Hardhat
 Infuria
@@ -10,6 +9,7 @@ CometChat
 Solidity
 EthersJs
 Faucet
+
 Running the demo
 To run the demo follow these steps:
 
