@@ -7,7 +7,7 @@ const { ethereum } = window;
 const contractAddress = "0x94360D54CB70E14ECa32C6E4b9978Ce8f645577F"; 
 const contractAbi = abi.abi;
 // ✅ Public Sepolia RPC for reading data without a wallet
-const SEPOLIA_RPC = "https://rpc.sepolia.org"; 
+const SEPOLIA_RPC = "https://sepolia.infura.io/v3/bbd9d58fe2e44eeea6617628dddc185c"; 
 
 const connectWallet = async () => {
     try {
