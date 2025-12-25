@@ -1,10 +1,18 @@
 import React from "react";
 import Identiicons from 'react-identicons';
 import {FaEthereum} from 'react-icons/fa';
-import { setGlobalState, truncate, daysRemaining } from "../store";
+import { useGlobalState, setGlobalState, truncate, daysRemaining } from "../store";
+import Moment from 'react-moment';
+import { payoutProject } from "../services/Blockchain";
 
-const ProjectDetails= ({project}) =>{
-    const expired = new Date().getTime() > project?.expiresAt;
+const ProjectDetails= () =>{
+    const [project] = useGlobalState('project');
+    const [connectedAccount] = useGlobalState('connectedAccount');
+    const [backers] = useGlobalState('backers');
+
+    if (!project) return null;
+
+    const expired = new Date().getTime() > project.expiresAt;
     const progress = project && parseFloat(project.cost) > 0 ? (parseFloat(project.raised) / parseFloat(project.cost)) * 100 : 0;
 
     return(
@@ -58,14 +66,69 @@ const ProjectDetails= ({project}) =>{
                 </div>
 
                 <div className="flex justify-start items-center mt-4 space-x-3">
-                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-green-700" onClick={()=>setGlobalState('backModal','scale-100')}>Back Campaign</button>
+                    {project?.status == 0? (
+                        <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-green-700" onClick={()=>setGlobalState('backModal','scale-100')}>Back Campaign</button>
+                        
+                    ):null}
+
                     <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-500" onClick={()=>setGlobalState('editModal','scale-100')}>Edit</button>
                     <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-red-600" onClick={()=>setGlobalState('deleteModal','scale-100')}>Delete Campaign</button>
-                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-orange-600">Payout</button>
+                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-orange-600" onClick={()=>payoutProject(project?.id)}>PAYOUT</button>
+
+                    {connectedAccount == project?.owner ?(
+                        project?.status != 3 ?(
+                            project?.status == 1 ? (
+                                <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-orange-600">Payout</button>
+                            ):project?.status != 4 ? (
+                                 <> 
+                                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-500" onClick={()=>setGlobalState('editModal','scale-100')}>Edit</button>
+                                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-red-600" onClick={()=>setGlobalState('deleteModal','scale-100')}>Delete Campaign</button>
+                                 </>
+                            ) : (
+                                <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-600" onClick={()=>setGlobalState('deleteModal','scale-100')}>Project Closed</button>
+                            )
+                        ):null
+                ):null}
+                </div>
+            </div>
+
+            <div className="flex flex-col justify-center items-center w-full mt-10">
+                <div className="max-h-[calc(100vh-25rem)] overflow-y-auto shadow-md rounded-md w-full">
+                    <table className="min-w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" className="py-3 px-6">Backer</th>
+                                <th scope="col" className="py-3 px-6">Donation</th>
+                                <th scope="col" className="py-3 px-6">Refunded</th>
+                                <th scope="col" className="py-3 px-6">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {backers.map((backer, i) => (
+                                <tr key={i} className="bg-white border-b text-gray-900">
+                                    <td className="py-4 px-6">
+                                        <div className="flex justify-start items-center space-x-2">
+                                            <Identiicons className="h-10 w-10 rounded-full" string={backer?.owner} size={25} />
+                                            <span>{truncate(backer?.owner, 4, 4, 11)}</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <small className="flex justify-start items-center space-x-1">
+                                            <FaEthereum />
+                                            <span className="text-gray-700 font-medium">{backer.contribution}</span>
+                                        </small>
+                                    </td>
+                                    <td className="py-4 px-6">{backer.refunded ? 'Yes' : 'No'}</td>
+                                    <td className="py-4 px-6">
+                                        <Moment fromNow>{backer.timestamp}</Moment>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
     )
 }
 

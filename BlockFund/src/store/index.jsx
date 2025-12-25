@@ -12,7 +12,8 @@ const { setGlobalState, useGlobalState, getGlobalState } = createGlobalState({
   projects: [],    
   project:null,       
   contract: null,         
-  stats: null,            
+  stats: null, 
+  backers: [],           
 })
 
 // Hides the middle of long strings (like wallet addresses: 0x123...abc)

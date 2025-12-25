@@ -24,6 +24,23 @@ const ProjectCard = ({ project }) => {
         return progress > 100 ? 100 : progress;
     }
 
+    const getStatus = () => {
+        switch (project.status) {
+            case 0:
+                return expired ? <small className="text-red-500">Expired</small> : <small className="text-green-500">Open</small>;
+            case 1:
+                return <small className="text-green-500">Successful</small>;
+            case 2:
+                return <small className="text-red-500">Reverted</small>;
+            case 3:
+                return <small className="text-red-500">Deleted</small>;
+            case 4:
+                return <small className="text-orange-500">Paidout</small>;
+            default:
+                return <small className="text-gray-500">Unknown</small>;
+        }
+    }
+
     return (
     <div className="rounded-lg shadow-lg bg-white w-64 m-4 p-4">
         <Link to={'/projects/' + project.id}>
@@ -40,8 +57,7 @@ const ProjectCard = ({ project }) => {
                     <small className="text-gray-700">{project.owner ? `${project.owner.slice(0, 5)}...${project.owner.slice(-4)}` : '0x...'}</small>
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <small className="text-gray-500">{expired ? 'Expired' : 'Open'}</small>
+                <div className="flex justify-end items-center">
                     <small className="text-gray-500">{expired ? 'Expired' : `${daysRemaining(project.expiresAt / 1000)} left`}</small>
                 </div>
              </div>
@@ -60,7 +76,7 @@ const ProjectCard = ({ project }) => {
 
             <div className="flex justify-between items-center flex-wrap mt-4 mb-2">
                 <small className="text-gray-500 font-bold">{project.backers} Backers</small>
-                <div>{expired ? <small className="text-red-500">Expired</small> : <small className="text-green-500">Open</small>}</div>
+                <div>{getStatus()}</div>
             </div>
            </div>
         </Link>

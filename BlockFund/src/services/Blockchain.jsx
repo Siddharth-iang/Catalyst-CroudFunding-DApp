@@ -1,10 +1,9 @@
 import abi from "../abis/src/contracts/Catalyst.sol/Catalyst.json"
-import address from "../abis/contractAddress.json";
 import { getGlobalState,setGlobalState } from "../store";
 import {ethers} from 'ethers';
 
 const {ethereum} = window;
-const contractAddress = address.address;
+const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const contractAbi = abi.abi;
 
 const connectWallet = async() =>{
@@ -48,6 +47,10 @@ const isWalletConnected = async() =>{
 const getEthereumContract = async () => {
   const connectedAccount = getGlobalState('connectedAccount');
 
+  if (!contractAddress) {
+    throw new Error("Contract address not found. Please ensure contractAddress.json is generated and contains the 'address' field.");
+  }
+
   if (connectedAccount) {
     const provider = new ethers.providers.Web3Provider(ethereum);
     const signer = provider.getSigner();
@@ -81,6 +84,102 @@ const createProject = async({
     }
 }
 
+const updateProject = async({
+  id,
+  title,
+  description,
+  imageURL,
+  expiresAt
+}) => {
+  try{
+    if(!ethereum) return alert("Please install MetaMask !");
+
+    const contract = await getEthereumContract();
+    
+    if (typeof contract.editProject !== 'function') {
+      throw new Error("The 'editProject' function was not found in the Smart Contract ABI. Please recompile and update your ABI file.");
+    }
+
+    if (id === undefined || id === null) {
+      throw new Error("Project ID is missing.");
+    }
+
+    const tx = await contract.editProject(id,title,description,imageURL,expiresAt);
+    await tx.wait();
+
+    await loadProject(id);
+
+  } catch(error) {
+    reportError(error);
+  }
+}
+
+const deleteProject = async(id) =>{
+  try{
+    if(!ethereum) return alert('Please install MetaMask');
+    const contract = await getEthereumContract();
+    await contract.deleteProject(id);
+  } catch(error){
+    reportError(error);
+  }
+}
+
+const backProject = async(id,amount) => {
+  try{
+    if(!ethereum) return alert('Please install MetaMask');
+    const contract = await getEthereumContract();
+    const connectedAccount =  getGlobalState('connectedAccount');
+    amount = ethers.utils.parseEther(amount);
+
+    const tx = await contract.backProject(id,{
+      from:connectedAccount,
+      value: amount._hex,
+    })
+    await tx.wait()
+
+    await getBackers(id)
+    await loadProject(id)
+  } catch(error){
+    reportError(error);
+  }
+}
+
+const getBackers = async(id) =>{
+  try{
+    if(!ethereum) return alert('Please install MetaMask');
+    const contract = await getEthereumContract();
+    let backers = await contract.getBackers(id);
+
+    setGlobalState('backers', structureBackers(backers));
+  } catch(error){
+    reportError(error);
+  }
+}
+
+const structureBackers = (backers) =>
+  backers.map((backer) =>({
+    owner:backer.owner,
+    refunded: backer.refunded,
+    timestamp: new Date(backer.timestamp.toNumber() * 1000).toJSON(),
+    contribution: ethers.utils.formatEther(backer.contribution)
+  })).reverse();
+
+  const payoutProject = async(id) =>{
+    try{
+      if(!ethereum) return alert('Please install MetaMask');
+      const contract = await getEthereumContract();
+      const connectedAccount =  getGlobalState('connectedAccount');
+
+      await contract.payoutProject(id, {
+        from: connectedAccount,
+      })
+
+    }catch(error){
+    reportError(error);
+   }
+  }
+
+
 const loadProjects = async () => {
     try {
         if (!ethereum) return console.log("Please install Metamask");
@@ -108,7 +207,6 @@ const loadProject = async(id) =>{
 
     setGlobalState('project',structuredProjects([project])[0]);
   } catch(error){
-    alert(JSON.stringify(error.message))
     reportError(error);
   }
 }
@@ -149,7 +247,7 @@ const structuredProjects = (projects) =>
   projects
     .map((project) => ({
       id: project.id.toNumber(),
-      owner: project.owner,
+      owner: project.owner.toLowerCase(),
       title: project.title,
       description: project.description,
       timestamp: project.timestamp.toNumber() * 1000,
@@ -207,4 +305,4 @@ const reportError = (error) =>{
     throw new Error(message);
 }
 
-export { connectWallet, isWalletConnected, createProject, loadProjects,switchNetwork, truncate,loadProject}
+export { connectWallet, isWalletConnected, createProject, loadProjects,switchNetwork, truncate,loadProject,updateProject,deleteProject, backProject, getBackers, structureBackers, payoutProject}
