@@ -170,7 +170,7 @@ const structureBackers = (backers) =>
       const contract = await getEthereumContract();
       const connectedAccount =  getGlobalState('connectedAccount');
 
-      await contract.payoutProject(id, {
+      await contract.payOutProject(id, {
         from: connectedAccount,
       })
 

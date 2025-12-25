@@ -66,26 +66,21 @@ const ProjectDetails= () =>{
                 </div>
 
                 <div className="flex justify-start items-center mt-4 space-x-3">
-                    {project?.status == 0? (
+                    {project?.status == 0 && !expired ? (
                         <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-green-700" onClick={()=>setGlobalState('backModal','scale-100')}>Back Campaign</button>
-                        
                     ):null}
 
-                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-500" onClick={()=>setGlobalState('editModal','scale-100')}>Edit</button>
-                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-red-600" onClick={()=>setGlobalState('deleteModal','scale-100')}>Delete Campaign</button>
-                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-orange-600" onClick={()=>payoutProject(project?.id)}>PAYOUT</button>
-
-                    {connectedAccount == project?.owner ?(
-                        project?.status != 3 ?(
+                    {connectedAccount === project?.owner ? (
+                        project?.status != 3 ? (
                             project?.status == 1 ? (
-                                <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-orange-600">Payout</button>
-                            ):project?.status != 4 ? (
-                                 <> 
-                                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-500" onClick={()=>setGlobalState('editModal','scale-100')}>Edit</button>
-                                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-red-600" onClick={()=>setGlobalState('deleteModal','scale-100')}>Delete Campaign</button>
-                                 </>
+                                <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-orange-600" onClick={() => payoutProject(project?.id)}>Payout</button>
+                            ) : project?.status != 4 ? (
+                                <>
+                                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-500" onClick={() => setGlobalState('editModal', 'scale-100')}>Edit</button>
+                                    <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-red-600" onClick={() => setGlobalState('deleteModal', 'scale-100')}>Delete Campaign</button>
+                                </>
                             ) : (
-                                <button type="button" className="bg-black text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md hover:bg-gray-600" onClick={()=>setGlobalState('deleteModal','scale-100')}>Project Closed</button>
+                                <button type="button" className="bg-gray-400 text-white py-2 px-3.5 font-medium text-xs rounded-full leading-tight uppercase shadow-md cursor-not-allowed" disabled>Project Paid Out</button>
                             )
                         ):null
                 ):null}
