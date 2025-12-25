@@ -3,7 +3,7 @@ import { getGlobalState,setGlobalState } from "../store";
 import {ethers} from 'ethers';
 
 const {ethereum} = window;
-const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const contractAddress = "0x94360D54CB70E14ECa32C6E4b9978Ce8f645577F";
 const contractAbi = abi.abi;
 
 const connectWallet = async() =>{
