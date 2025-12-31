@@ -3,18 +3,17 @@ import { getGlobalState, setGlobalState } from "../store";
 import { ethers } from 'ethers';
 
 const { ethereum } = window;
-// ✅ Your correct Sepolia Address
 const contractAddress = "0x94360D54CB70E14ECa32C6E4b9978Ce8f645577F"; 
 const contractAbi = abi.abi;
-// ✅ Public Sepolia RPC for reading data without a wallet
-const SEPOLIA_RPC = "https://sepolia.infura.io/v3/bbd9d58fe2e44eeea6617628dddc185c"; 
+const SEPOLIA_RPC = "https://rpc.sepolia.org"; 
 
 const connectWallet = async () => {
     try {
         if (!ethereum) return alert("Please install Metamask!");
         const accounts = await ethereum.request({ method: "eth_requestAccounts" });
         setGlobalState('connectedAccount', accounts[0]?.toLowerCase());
-        await switchNetwork();
+        // Only switch if we are NOT on Sepolia
+        await checkNetwork();
     } catch (error) {
         reportError(error);
     }
@@ -23,8 +22,7 @@ const connectWallet = async () => {
 const isWalletConnected = async () => {
     try {
         if (!ethereum) return alert("Please install Metamask!");
-        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-        setGlobalState('connectedAccount', accounts[0]?.toLowerCase());
+        const accounts = await ethereum.request({ method: "eth_accounts" });
 
         window.ethereum.on('chainChanged', (chainId) => {
             window.location.reload();
@@ -37,13 +35,9 @@ const isWalletConnected = async () => {
 
         if (accounts.length) {
             setGlobalState('connectedAccount', accounts[0]?.toLowerCase());
-            // Intentionally checked so we don't annoy user on every reload
-             const chainId = await ethereum.request({ method: 'eth_chainId' });
-             if (chainId !== '0xaa36a7') {
-                 await switchNetwork();
-             }
+            // ✅ CRITICAL FIX: Only switch if wrong network, don't force it blindly
+            await checkNetwork();
         } else {
-            alert('Please connect wallet.');
             console.log('No accounts found.');
         }
     } catch (error) {
@@ -51,70 +45,49 @@ const isWalletConnected = async () => {
     }
 }
 
+// Helper to check network silently
+const checkNetwork = async () => {
+    const chainId = await ethereum.request({ method: 'eth_chainId' });
+    if (chainId !== '0xaa36a7') { // 0xaa36a7 is Sepolia
+        await switchNetwork();
+    }
+}
+
 const getEthereumContract = async () => {
     const connectedAccount = getGlobalState('connectedAccount');
 
     if (connectedAccount) {
-        // ✅ User is connected: Use their MetaMask signer
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const contract = new ethers.Contract(contractAddress, contractAbi, signer);
         return contract;
     } else {
-        // ✅ User NOT connected: Use public RPC (Read-Only)
-        // This fixes the issue where data wouldn't load for visitors
         const provider = new ethers.providers.JsonRpcProvider(SEPOLIA_RPC);
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
         return contract;
     }
 };
 
-const createProject = async ({
-    title,
-    description,
-    imageURL,
-    cost,
-    expiresAt,
-}) => {
+const createProject = async ({ title, description, imageURL, cost, expiresAt }) => {
     try {
         if (!ethereum) return alert("Please install Metamask");
-
         const contract = await getEthereumContract();
         cost = ethers.utils.parseEther(cost);
         const tx = await contract.createProject(title, description, imageURL, cost, expiresAt);
         await tx.wait();
-
         await loadProjects();
     } catch (error) {
         reportError(error);
     }
 }
 
-const updateProject = async ({
-    id,
-    title,
-    description,
-    imageURL,
-    expiresAt
-}) => {
+const updateProject = async ({ id, title, description, imageURL, expiresAt }) => {
     try {
         if (!ethereum) return alert("Please install MetaMask !");
-
         const contract = await getEthereumContract();
-
-        if (typeof contract.editProject !== 'function') {
-            throw new Error("The 'editProject' function was not found in the Smart Contract ABI. Please recompile and update your ABI file.");
-        }
-
-        if (id === undefined || id === null) {
-            throw new Error("Project ID is missing.");
-        }
-
         const tx = await contract.editProject(id, title, description, imageURL, expiresAt);
         await tx.wait();
-
         await loadProject(id);
-
     } catch (error) {
         reportError(error);
     }
@@ -136,13 +109,8 @@ const backProject = async (id, amount) => {
         const contract = await getEthereumContract();
         const connectedAccount = getGlobalState('connectedAccount');
         amount = ethers.utils.parseEther(amount);
-
-        const tx = await contract.backProject(id, {
-            from: connectedAccount,
-            value: amount._hex,
-        })
+        const tx = await contract.backProject(id, { from: connectedAccount, value: amount._hex })
         await tx.wait()
-
         await getBackers(id)
         await loadProject(id)
     } catch (error) {
@@ -152,10 +120,8 @@ const backProject = async (id, amount) => {
 
 const getBackers = async (id) => {
     try {
-        if (!ethereum) return alert('Please install MetaMask');
         const contract = await getEthereumContract();
         let backers = await contract.getBackers(id);
-
         setGlobalState('backers', structureBackers(backers));
     } catch (error) {
         reportError(error);
@@ -175,26 +141,19 @@ const payoutProject = async (id) => {
         if (!ethereum) return alert('Please install MetaMask');
         const contract = await getEthereumContract();
         const connectedAccount = getGlobalState('connectedAccount');
-
-        await contract.payOutProject(id, {
-            from: connectedAccount,
-        })
-
+        await contract.payOutProject(id, { from: connectedAccount })
     } catch (error) {
         reportError(error);
     }
 }
 
-
 const loadProjects = async () => {
     try {
-        // NOTE: We removed the check for 'ethereum' here so visitors can see projects too
         const contract = await getEthereumContract();
         const projects = await contract.getProjects();
         const stats = await contract.stats();
         setGlobalState('stats', structureStats(stats));
         setGlobalState('projects', structuredProjects(projects));
-
     } catch (error) {
         console.error("Error loading projects:", error);
     }
@@ -202,22 +161,20 @@ const loadProjects = async () => {
 
 const loadProject = async (id) => {
     try {
-        // NOTE: Removed 'if(!ethereum)' check so visitors can see details
         const contract = await getEthereumContract();
         const project = await contract.getProject(Number(id));
-
         setGlobalState('project', structuredProjects([project])[0]);
     } catch (error) {
         reportError(error);
     }
 }
 
-// ✅ FIXED: Now switches to Sepolia (0xaa36a7) instead of Localhost (0x7A69)
+// ✅ FIXED: REMOVED ALL LOCALHOST REFERENCES
 const switchNetwork = async () => {
     try {
         await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0xaa36a7' }], // 0xaa36a7 is Sepolia
+            params: [{ chainId: '0xaa36a7' }], // Sepolia
         });
     } catch (error) {
         if (error.code === 4902) {
@@ -228,7 +185,7 @@ const switchNetwork = async () => {
                         {
                             chainId: '0xaa36a7',
                             chainName: 'Sepolia Test Network',
-                            rpcUrls: ['https://sepolia.infura.io/v3/'], 
+                            rpcUrls: ['https://sepolia.infura.io/v3/'],
                             nativeCurrency: {
                                 name: 'Sepolia Ether',
                                 symbol: 'SEP',
@@ -293,18 +250,9 @@ const truncate = (text, startChars, endChars, maxLength) => {
 const reportError = (error) => {
     console.error("Blockchain Service Error:", error);
     let message = error.message || 'An error occurred.';
-
-    if (error.code === 'CALL_EXCEPTION' && error.reason) {
-        message = error.reason;
-    } else if (error.code === 'CALL_EXCEPTION') {
-        message = 'Smart Contract not found. Please check your network and contract address.';
-    } else if (error.data?.message) {
-        message = error.data.message;
-    }
-
-    if (message.startsWith('execution reverted: ')) {
-        message = message.substring('execution reverted: '.length);
-    }
+    if (error.code === 'CALL_EXCEPTION') message = 'Smart Contract not found. Please check your network and contract address.';
+    if (error.data?.message) message = error.data.message;
+    if (message.startsWith('execution reverted: ')) message = message.substring('execution reverted: '.length);
     throw new Error(message);
 }
 
